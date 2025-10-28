@@ -1,7 +1,7 @@
 provider "aws" {
   region     = "us-east-1"
-  access_key = "TU_ACCESS_KEY"
-  secret_key = "TU_SECRET_KEY"
+  access_key = "TASIAZYJNWORHEOBJTB3B"
+  secret_key = "xOQUPKgxbffFqtTqs66kg4QMP6v62K6fFaUYkIrb"
 }
 
 resource "aws_security_group" "allow_http" {
@@ -35,7 +35,7 @@ resource "aws_security_group" "allow_http" {
 resource "aws_instance" "web_app" {
   ami                    = "ami-04b70fa74e45c3917" # Ubuntu 22.04 LTS (us-east-1)
   instance_type          = "t2.micro"
-  key_name               = "mi_par_de_claves"
+  key_name               = "ProyectoPython"
   vpc_security_group_ids = [aws_security_group.allow_http.id]
 
   user_data = <<-EOF
