@@ -5,7 +5,7 @@ provider "aws" {
 
 # Instancia EC2
 resource "aws_instance" "web_app" {
-  ami           = "ami-0c55b159cbfafe1f0" # Ubuntu 22.04 (puedes verificar en AWS)
+  ami           = "ami-04b70fa74e45c3917" # Ubuntu 22.04 (puedes verificar en AWS)
   instance_type = "t2.micro"
   key_name      = "ProyectoPython"
 
