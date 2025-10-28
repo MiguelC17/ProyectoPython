@@ -1,58 +1,25 @@
 provider "aws" {
-  region = "us-east-1" # cámbialo a tu región
+  region     = "us-east-1"
+  access_key = "TU_ACCESS_KEY"
+  secret_key = "TU_SECRET_KEY"
 }
 
-
-# Instancia EC2
-resource "aws_instance" "web_app" {
-  ami           = "ami-04b70fa74e45c3917" # Ubuntu 22.04 (puedes verificar en AWS)
-  instance_type = "t2.micro"
-  key_name      = "ProyectoPython"
-
-  # Seguridad: abre puertos 22 (SSH) y 8501 (Streamlit)
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              # Actualizar sistema
-              apt update -y
-              apt upgrade -y
-
-              # Instalar Python y dependencias
-              apt install -y python3 python3-pip git
-
-              # Clonar tu repositorio (ajusta el enlace)
-              cd /home/ubuntu
-              git clone https://github.com/MiguelC17/ProyectoPython.git app
-
-              cd app/src
-
-              # Instalar Streamlit
-              pip install streamlit
-
-              # Ejecutar Streamlit en segundo plano
-              nohup streamlit run pages/Home.py --server.port=8501 --server.address=0.0.0.0 &
-              EOF
-
-  tags = {
-    Name = "StreamlitApp"
-  }
-}
-
-# Grupo de seguridad para la instancia
-resource "aws_security_group" "web_sg" {
-  name_prefix = "streamlit-sg"
+resource "aws_security_group" "allow_http" {
+  name        = "allow_http"
+  description = "Permitir tráfico HTTP y SSH"
 
   ingress {
-    from_port   = 22
-    to_port     = 22
+    description = "HTTP desde cualquier parte"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 8501
-    to_port     = 8501
+    description = "SSH desde cualquier parte"
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -65,11 +32,27 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# Mostrar IP pública al finalizar
-output "public_ip" {
-  value = aws_instance.web_app.public_ip
+resource "aws_instance" "web_app" {
+  ami                    = "ami-04b70fa74e45c3917" # Ubuntu 22.04 LTS (us-east-1)
+  instance_type          = "t2.micro"
+  key_name               = "mi_par_de_claves"
+  vpc_security_group_ids = [aws_security_group.allow_http.id]
+
+  user_data = <<-EOF
+    #!/bin/bash
+    apt update -y
+    apt install -y apache2
+    systemctl start apache2
+    systemctl enable apache2
+    echo "<h1>¡Servidor desplegado correctamente en AWS!</h1>" > /var/www/html/index.html
+  EOF
+
+  tags = {
+    Name = "ServidorWebPython"
+  }
 }
 
-output "access_url" {
-  value = "http://${aws_instance.web_app.public_ip}:8501"
+output "public_ip" {
+  value = aws_instance.web_app.public_ip
+  description = "Dirección IPv4 pública del servidor"
 }
