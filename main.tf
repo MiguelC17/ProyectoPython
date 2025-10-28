@@ -1,46 +1,63 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-1" # cámbialo a tu región
 }
 
-resource "aws_instance" "web_server" {
-  ami           = "ami-0c7217cdde317cfec"  # Ubuntu 22.04
+# Clave SSH para conectarte si deseas hacerlo manualmente
+resource "aws_key_pair" "deployer" {
+  key_name   = "deployer-key"
+  public_key = file("~/.ssh/id_rsa.pub")
+}
+
+# Instancia EC2
+resource "aws_instance" "web_app" {
+  ami           = "ami-0c55b159cbfafe1f0" # Ubuntu 22.04 (puedes verificar en AWS)
   instance_type = "t2.micro"
-  key_name      = "ProyectoPython"     # tu par de claves .pem
+  key_name      = ProyectoPython
 
-  user_data = file("script.sh")
-
-  tags = {
-    Name = "ServidorWeb"
-  }
-
+  # Seguridad: abre puertos 22 (SSH) y 8501 (Streamlit)
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
-   user_data = <<-EOF
+  user_data = <<-EOF
               #!/bin/bash
-              sudo apt update -y
-              sudo apt install apache2 -y
-              sudo systemctl enable apache2
-              sudo systemctl start apache2
-              
+              # Actualizar sistema
+              apt update -y
+              apt upgrade -y
+
+              # Instalar Python y dependencias
+              apt install -y python3 python3-pip git
+
+              # Clonar tu repositorio (ajusta el enlace)
+              cd /home/ubuntu
+              git clone https://github.com/MiguelC17/ProyectoPython.git app
+
+              cd app/src
+
+              # Instalar Streamlit
+              pip install streamlit
+
+              # Ejecutar Streamlit en segundo plano
+              nohup streamlit run pages/Home.py --server.port=8501 --server.address=0.0.0.0 &
+              EOF
+
   tags = {
-    Name = "ServidorWeb-Terraform"
+    Name = "StreamlitApp"
   }
 }
 
+# Grupo de seguridad para la instancia
 resource "aws_security_group" "web_sg" {
-  name        = "web-sg"
-  description = "Permitir HTTP y SSH"
+  name_prefix = "streamlit-sg"
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 22
-    to_port     = 22
+    from_port   = 8501
+    to_port     = 8501
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -53,4 +70,11 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
+# Mostrar IP pública al finalizar
+output "public_ip" {
+  value = aws_instance.web_app.public_ip
+}
 
+output "access_url" {
+  value = "http://${aws_instance.web_app.public_ip}:8501"
+}
