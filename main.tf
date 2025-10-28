@@ -2,17 +2,12 @@ provider "aws" {
   region = "us-east-1" # cámbialo a tu región
 }
 
-# Clave SSH para conectarte si deseas hacerlo manualmente
-resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = file("~/.ssh/id_rsa.pub")
-}
 
 # Instancia EC2
 resource "aws_instance" "web_app" {
   ami           = "ami-0c55b159cbfafe1f0" # Ubuntu 22.04 (puedes verificar en AWS)
   instance_type = "t2.micro"
-  key_name      = ProyectoPython
+  key_name      = "ProyectoPython"
 
   # Seguridad: abre puertos 22 (SSH) y 8501 (Streamlit)
   vpc_security_group_ids = [aws_security_group.web_sg.id]
