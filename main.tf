@@ -14,6 +14,17 @@ resource "aws_instance" "web_server" {
   }
 
   vpc_security_group_ids = [aws_security_group.web_sg.id]
+
+   user_data = <<-EOF
+              #!/bin/bash
+              sudo apt update -y
+              sudo apt install apache2 -y
+              sudo systemctl enable apache2
+              sudo systemctl start apache2
+              
+  tags = {
+    Name = "ServidorWeb-Terraform"
+  }
 }
 
 resource "aws_security_group" "web_sg" {
@@ -41,3 +52,5 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+
