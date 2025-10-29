@@ -1,4 +1,4 @@
-# src/Home.py ---- => Para ejecutarse me paro en frontend/src y ejecuto el comando ""python -m streamlit run Home.py""
+
 import streamlit as st
 
 st.set_page_config(page_title="Mi Red Social", page_icon="💬", layout="centered")

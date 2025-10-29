@@ -1,4 +1,4 @@
-# src/pages/1_Registro.py
+
 import streamlit as st
 
 st.title("📝 Registro de Usuario")

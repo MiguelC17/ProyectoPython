@@ -1,4 +1,4 @@
-# src/pages/2_Login.py
+
 import streamlit as st
 
 st.title("🔐 Iniciar Sesión")

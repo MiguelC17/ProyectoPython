@@ -1,4 +1,4 @@
-# src/pages/3_Muro.py
+
 import streamlit as st
 
 st.title("🧱 Muro de Publicaciones")

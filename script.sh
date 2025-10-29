@@ -1,13 +1,30 @@
 #!/bin/bash
-sudo apt update -y
-sudo apt install -y docker.io docker-compose python3-pip
-sudo systemctl enable docker
-sudo systemctl start docker
+set -e
 
+# actualizar e instalar docker + git
+apt update -y
+apt install -y docker.io git
+systemctl enable docker
+systemctl start docker
+
+# directorio de trabajo
 cd /home/ubuntu
 
-# Clonar tu repositorio (reemplaza con el tuyo)
-git clone https://github.com/MiguelC17/ProyectoPython.git ProyectoPython
+# clonar o actualizar el repo (REEMPLAZA con tu repo real)
+if [ ! -d "ProyectoPython" ]; then
+  git clone https://github.com/MiguelC17/ProyectoPython.git ProyectoPython
+else
+  cd ProyectoPython
+  git pull || true
+  cd ..
+fi
+
 cd ProyectoPython
 
-sudo docker-compose up -d
+# construir la imagen Docker y correrla (mapear puerto 80 host -> 8501 contenedor)
+docker build -t proyectopython .
+# eliminar contenedor anterior si existe
+docker rm -f proyectopython || true
+docker run -d --name proyectopython -p 80:8501 proyectopython
+
+# fin
