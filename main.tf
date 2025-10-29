@@ -29,17 +29,32 @@ resource "aws_security_group" "allow_http" {
 }
 
 resource "aws_instance" "web_app" {
-  ami           = "ami-0c02fb55956c7d316"
+  ami           = "ami-0fc5d935ebf8bc3bc" # Amazon Linux 2023 (válida para us-east-1)
   instance_type = "t2.micro"
-  key_name      = "ProyectoPython"
-  vpc_security_group_ids = [aws_security_group.allow_http.id]
+  key_name      = "mi_clave_aws"          # Cambia esto por tu clave real
 
-  user_data = file("script.sh")
+  security_groups = [aws_security_group.allow_http.name]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y docker git
+              systemctl start docker
+              systemctl enable docker
+
+              cd /home/ec2-user
+              git clone https://github.com/tu_usuario/ProyectoPython.git
+              cd ProyectoPython
+
+              docker build -t miapp .
+              docker run -d -p 80:8501 miapp
+              EOF
 
   tags = {
-    Name = "proyecto-web"
+    Name = "web-app"
   }
 }
+
 
 output "public_ip" {
   value = aws_instance.web_app.public_ip
