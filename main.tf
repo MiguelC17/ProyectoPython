@@ -4,7 +4,7 @@ provider "aws" {
 
 resource "aws_security_group" "allow_http" {
   name        = "allow_http"
-  description = "Permitir tráfico HTTP y SSH"
+  description = "Permitir trafico HTTP y SSH"
 
   ingress {
     description = "HTTP desde cualquier parte"
