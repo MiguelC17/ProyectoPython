@@ -1,7 +1,5 @@
 provider "aws" {
   region     = "us-east-1"
-  access_key = "TASIAZYJNWORHEOBJTB3B"
-  secret_key = "xOQUPKgxbffFqtTqs66kg4QMP6v62K6fFaUYkIrb"
 }
 
 resource "aws_security_group" "allow_http" {
