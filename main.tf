@@ -31,7 +31,7 @@ resource "aws_security_group" "allow_http" {
 resource "aws_instance" "web_app" {
   ami           = "ami-0fc5d935ebf8bc3bc" # Amazon Linux 2023 (válida para us-east-1)
   instance_type = "t2.micro"
-  key_name      = "mi_clave_aws"          # Cambia esto por tu clave real
+  key_name      = "ProyectoPython"          # Cambia esto por tu clave real
 
   security_groups = [aws_security_group.allow_http.name]
 
