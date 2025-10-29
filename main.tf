@@ -1,5 +1,5 @@
 provider "aws" {
-  region     = "us-east-1"
+  region = "us-east-1"
 }
 
 resource "aws_security_group" "allow_http" {
@@ -7,7 +7,6 @@ resource "aws_security_group" "allow_http" {
   description = "Permitir trafico HTTP y SSH"
 
   ingress {
-    description = "HTTP desde cualquier parte"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -15,7 +14,6 @@ resource "aws_security_group" "allow_http" {
   }
 
   ingress {
-    description = "SSH desde cualquier parte"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -31,26 +29,18 @@ resource "aws_security_group" "allow_http" {
 }
 
 resource "aws_instance" "web_app" {
-  ami                    = "ami-04b70fa74e45c3917" # Ubuntu 22.04 LTS (us-east-1)
-  instance_type          = "t2.micro"
-  key_name               = "ProyectoPython"
+  ami           = "ami-0c02fb55956c7d316"
+  instance_type = "t2.micro"
+  key_name      = "ProyectoPython"
   vpc_security_group_ids = [aws_security_group.allow_http.id]
 
-  user_data = <<-EOF
-    #!/bin/bash
-    apt update -y
-    apt install -y apache2
-    systemctl start apache2
-    systemctl enable apache2
-    echo "<h1>¡Servidor desplegado correctamente en AWS!</h1>" > /var/www/html/index.html
-  EOF
+  user_data = file("script.sh")
 
   tags = {
-    Name = "ServidorWebPython"
+    Name = "proyecto-web"
   }
 }
 
 output "public_ip" {
   value = aws_instance.web_app.public_ip
-  description = "Dirección IPv4 pública del servidor"
 }

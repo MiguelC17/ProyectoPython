@@ -7,7 +7,7 @@ sudo systemctl start docker
 cd /home/ubuntu
 
 # Clonar tu repositorio (reemplaza con el tuyo)
-git clone https://github.com/MiguelC17/ProyectoPython.git
-cd 
+git clone https://github.com/MiguelC17/ProyectoPython.git ProyectoPython
+cd ProyectoPython
 
 sudo docker-compose up -d
