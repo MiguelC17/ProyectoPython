@@ -58,6 +58,13 @@ resource "aws_instance" "streamlit_app" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.allow_http.id]
+  key_name               = 
+
+  user_data = {
+
+    
+
+  }
 
   # Ejecuta script.sh que debe estar en la misma carpeta que main.tf
   user_data = file("${path.module}/script.sh")

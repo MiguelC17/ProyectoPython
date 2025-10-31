@@ -2,6 +2,7 @@ version: "3.8"
 services:
   app:
     build: .
+    container_name: proyectopython
     ports:
       - "8501:8501"
     restart: always
