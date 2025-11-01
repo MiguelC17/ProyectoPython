@@ -1,36 +1,29 @@
+# Bloque que se incluye como buena practica para asegurarnos de que funciona bien el proveedor de AWS
 terraform {
   required_providers {
-    aws = { source = "hashicorp/aws" }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
 
+#############################################
+# 📦 CONFIGURACIÓN PRINCIPAL DE TERRAFORM
+#############################################
 provider "aws" {
-  region = "us-east-1" 
+  region = "us-east-1"   # ✅ Cambia la región si usas otra
 }
 
-# Buscar la AMI Ubuntu 22.04 (canónico) más reciente en la región
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-}
-
-# VPC por defecto
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Security group: permitir 80 (HTTP) y 22 (SSH) — opcional 8501 también si prefieres
-resource "aws_security_group" "allow_http" {
-  name        = "allow_http_streamlit"
-  description = "Allow HTTP (80) and SSH (22)"
-  vpc_id      = data.aws_vpc.default.id
+#############################################
+# 🔐 CREACIÓN DE UN SECURITY GROUP (HTTP + SSH)
+#############################################
+resource "aws_security_group" "allow_web" {
+  name        = "allow_web"
+  description = "Allow HTTP (80) and SSH (22) inbound traffic"
 
   ingress {
-    description = "HTTP"
+    description = "Allow HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -38,7 +31,7 @@ resource "aws_security_group" "allow_http" {
   }
 
   ingress {
-    description = "SSH"
+    description = "Allow SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -46,6 +39,7 @@ resource "aws_security_group" "allow_http" {
   }
 
   egress {
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -53,32 +47,58 @@ resource "aws_security_group" "allow_http" {
   }
 }
 
-# EC2 instance
-resource "aws_instance" "streamlit_app" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.allow_http.id]
-  key_name               = 
+#############################################
+# 🖥️ INSTANCIA EC2 CON DOCKER + DOCKER COMPOSE
+#############################################
+resource "aws_instance" "web_app" {
+  ami           = "ami-0fc5d935ebf8bc3bc"  # ✅ Ubuntu Server 22.04 LTS (us-east-1)
+  instance_type = "t2.micro"               # ✅ Gratis en capa free tier
+  key_name      = ""                       # ⚠️ Déjalo vacío si no usas par de claves
+  security_groups = [aws_security_group.allow_web.name]
 
-  user_data = {
+  user_data = <<-EOF
+              #!/bin/bash
+              set -e
+              
+              # actualizar sistema e instalar dependencias
+              apt update -y
+              apt install -y docker.io docker-compose git
 
-    
+              systemctl enable docker
+              systemctl start docker
 
-  }
+              cd /home/ubuntu
 
-  # Ejecuta script.sh que debe estar en la misma carpeta que main.tf
-  user_data = file("${path.module}/script.sh")
+              # Clonar tu repositorio (ajusta si es privado)
+              if [ ! -d "ProyectoPython" ]; then
+                git clone https://github.com/MiguelC17/ProyectoPython.git ProyectoPython
+              else
+                cd ProyectoPython
+                git pull || true
+                cd ..
+              fi
+
+              cd ProyectoPython
+
+              # Levantar servicios con Docker Compose
+              docker-compose down || true
+              docker-compose up -d
+              EOF
 
   tags = {
-    Name = "StreamlitApp"
+    Name = "ServidorWeb-Python"
   }
+
+  # Permitir ver la IP pública después del apply
+  associate_public_ip_address = true
 }
 
-output "public_ip" {
-  description = "IPv4 publica de la instancia"
-  value       = aws_instance.streamlit_app.public_ip
+
+#############################################
+# 🌍 SALIDA: MOSTRAR IPv4 PÚBLICA
+#############################################
+output "instance_public_ip" {
+  description = "La dirección IPv4 pública del servidor"
+  value       = aws_instance.web_app.public_ip
 }
 
-output "access_url" {
-  value = "http://${aws_instance.streamlit_app.public_ip}"
-}
